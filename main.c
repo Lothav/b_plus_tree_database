@@ -9,65 +9,99 @@ typedef int bool;
 
 typedef unsigned long long Offset;
 typedef struct field_st {
-    char field[30];
+    char *field;
 } Field;
 
 typedef struct page_st *Page_Pointer;
 typedef struct page_st {
     int pk;
     bool is_leaf;
-    Offset left;
-    Offset right;
-    Page_Pointer *sons[3223];
-    Field *fields[123123];
+    Offset head;
+    Page_Pointer **sons;
+    Field *fields;
 } Page;
 
+void leafSerializeAndInsert(Page *page) {
 
-Page *getRoot(){
+    Offset metadata[3];
+    Offset oler[3];
 
-    Page *root = (Page *)malloc(sizeof(Page));
+    FILE* db = NULL;
+    db = fopen("db.txt","wb");
 
-    root->is_leaf = false;
-    //page->sons = NULL;
-    //page->fields = NULL;
-    root->left = 0;
-    root->right = 0;
-    return root;
+    metadata[0] = (Offset)page->pk;
+    metadata[1] = (Offset)page->is_leaf;
+    metadata[2] = page->head;
+    if(db != NULL){
+        fwrite(&(metadata[0]), sizeof(Offset), 3, db);
+        fflush(db);
+    }
+    FILE* read = NULL;
+    read  = fopen("db.txt", "rb");
+
+    fread(&(oler[0]), sizeof(Offset), 3, read) ;
+}
+
+void insertOnTree(Page *page){
+
+    leafSerializeAndInsert(page);
+
+
+}
+
+void add(int fields_number){
+
+    int i;
+    char *field;
+
+    Page *new_page;
+    new_page = (Page *) malloc(sizeof(Page));
+    new_page->fields = (Field *) malloc(sizeof(Field));
+    new_page->head = NULL;
+    new_page->is_leaf = true;
+    new_page->sons = NULL;
+    new_page->pk = atoi(strtok(NULL, "\t"));
+
+    for(i = 0; i < fields_number-1; i++){
+        field = strtok(NULL, "\t");
+        new_page->fields[i].field = (char *) malloc(sizeof(31));
+        stpcpy(new_page->fields[i].field, field);
+        insertOnTree(new_page);
+    }
 }
 
 int main(int argc, char *argv[]) {
 
     FILE* db = NULL, *in = NULL, *out = NULL;
     int tree_order, fields_number, field_id;
-    int pk;
 
-    char command[7];
+    char *command;
     char str[256];
+    char *token;
 
     Page* root;
-
-    db = fopen("db.txt","w+");
 
     out = fopen(argv[1],"w");
     in = fopen(argv[2],"r");
 
-    tree_order = (int)argv[3];
-    fields_number = (int)argv[4];
-    field_id = (int)argv[5];
+    tree_order = atoi(argv[3]);
+    fields_number = atoi(argv[4]);
+    field_id = atoi(argv[5]);
 
-    root  = getRoot();
     while(fgets(str, sizeof (str), in)){
-        sscanf(str, " %s", command);
-        if(!strcmp(command,"dump"));
-        else{
-            sscanf(str, "\t%d", &pk);
+        command = strtok(str, "\t");
+        while(command != NULL){
+
+            if(!strcmp(command,"add")) add(fields_number;
+
+            command = strtok(NULL, "\t");
         }
-        fflush(stdin);
     }
-
-
 }
 /*
+ *
+ *   FIND METHOD FROM ZIVIO NIVIANI BOOK
+ *
 void find(Adress* a, Page_Pointer* Ap){
     int i;
     Page_Pointer Pag;
